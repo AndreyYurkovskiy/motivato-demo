@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width:device-width, initial-scale=1">
+  <title>Motivato — Твой пульт дисциплины</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+    .app { min-height: 100vh; background: linear-gradient(to bottom, #f8fafc, #fff); padding: 12px 16px; }
+    .container { max-width: 28rem; margin: 0 auto; padding-bottom: 2rem; }
+    .space-y > * + * { margin-top: 1rem; }
+    .card { background: #fff; border-radius: 28px; border: none; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); overflow: hidden; }
+    .card-header { padding: 1.5rem; padding-bottom: 0.75rem; }
+    .card-content { padding: 1.5rem; padding-top: 0; }
+    .card-hero { background: #0f172a; color: #fff; padding: 1.5rem 1.25rem; }
+    .card-hero .tag { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.22em; color: #cbd5e1; }
+    .card-hero h1 { margin: 0.5rem 0 0; font-size: 1.5rem; font-weight: 700; }
+    .card-hero p { margin: 0.5rem 0 0; font-size: 0.875rem; line-height: 1.5; color: #cbd5e1; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; padding: 1rem; }
+    .stat { background: #f8fafc; border-radius: 22px; padding: 0.75rem; }
+    .stat-label { display: flex; align-items: center; gap: 0.25rem; font-size: 11px; color: #64748b; margin-bottom: 0.25rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+    .stat-focus { font-size: 0.875rem; font-weight: 600; line-height: 1.25; color: #0f172a; }
+    .icon { display: inline-block; width: 14px; height: 14px; flex-shrink: 0; }
+    .section-title { display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem; font-weight: 600; }
+    .section-title .icon { width: 20px; height: 20px; }
+    .quote-text { font-size: 0.875rem; line-height: 1.5; color: #475569; }
+    .antisliv { background: #f8fafc; border-radius: 24px; padding: 1rem; }
+    .antisliv h4 { margin: 0; font-size: 0.875rem; font-weight: 500; color: #1e293b; }
+    .antisliv p { margin: 0.5rem 0 0; font-size: 0.875rem; line-height: 1.5; color: #475569; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border-radius: 16px; border: none; cursor: pointer; transition: background 0.2s; }
+    .btn-default { background: #0f172a; color: #fff; }
+    .btn-default:hover { background: #1e293b; }
+    .btn-ghost { background: transparent; color: inherit; }
+    .btn-ghost:hover { background: #f1f5f9; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+    .btn-icon { width: 32px; height: 32px; padding: 0; border-radius: 9999px; }
+    .input, .textarea { width: 100%; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; }
+    .textarea { min-height: 80px; resize: vertical; }
+    .input:focus, .textarea:focus { outline: none; border-color: #94a3b8; box-shadow: 0 0 0 2px rgba(148,163,184,0.3); }
+    .habit-item { background: #f8fafc; border-radius: 24px; padding: 1rem; margin-bottom: 0.5rem; }
+    .habit-row { display: flex; align-items: flex-start; gap: 0.75rem; }
+    .habit-body { flex: 1; min-width: 0; }
+    .habit-title { font-size: 1rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .habit-reason { font-size: 0.75rem; line-height: 1.25; color: #64748b; margin-top: 0.25rem; }
+    .habit-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.75rem; }
+    .habit-meta-item { background: #fff; border-radius: 16px; padding: 0.5rem 0.75rem; }
+    .habit-meta-label { font-size: 11px; color: #64748b; }
+    .habit-meta-value { font-size: 1.125rem; font-weight: 700; }
+    .habit-progress { margin-top: 0.75rem; }
+    .habit-progress-header { display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-bottom: 0.25rem; }
+    .progress-bar { height: 10px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #0f172a; border-radius: 9999px; transition: width 0.3s; }
+    .badge { display: inline-flex; padding: 0.125rem 0.5rem; font-size: 0.75rem; font-weight: 600; border-radius: 12px; background: #0f172a; color: #fff; }
+    .checkbox-wrap { width: 20px; height: 20px; border: 2px solid #0f172a; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+    .checkbox-wrap.checked { background: #0f172a; color: #fff; }
+    .checkbox-wrap svg { width: 12px; height: 12px; }
+    .delete-row { display: flex; justify-content: flex-end; margin-top: 0.5rem; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-content { background: #fff; border-radius: 24px; padding: 1.5rem; max-width: 28rem; width: 100%; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); }
+    .modal-header { margin-bottom: 1rem; }
+    .modal-title { font-size: 1.125rem; font-weight: 600; }
+    .modal-body { display: flex; flex-direction: column; gap: 0.75rem; }
+    .modal-body .btn { width: 100%; }
+    .calendar-wrap { background: #f8fafc; border-radius: 24px; padding: 1rem; }
+    .calendar-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .calendar-month { font-size: 0.875rem; font-weight: 600; color: #1e293b; text-transform: capitalize; }
+    .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; text-align: center; font-size: 11px; font-weight: 500; color: #64748b; padding-bottom: 0.5rem; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .calendar-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 0.75rem; font-weight: 600; }
+    .calendar-cell.done { background: #0f172a; color: #fff; }
+    .calendar-cell.today { background: #fff; border: 1px solid #cbd5e1; color: #0f172a; }
+    .calendar-cell.empty { background: transparent; }
+    .calendar-cell.other { background: #fff; color: #475569; }
+    .habit-tabs { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
+    .habit-tab { flex-shrink: 0; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; border-radius: 16px; border: none; cursor: pointer; transition: all 0.2s; }
+    .habit-tab.active { background: #0f172a; color: #fff; }
+    .habit-tab:not(.active) { background: #f1f5f9; color: #334155; }
+    .habit-tab:hover:not(.active) { background: #e2e8f0; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .habit-block + .habit-block { margin-top: 1rem; }
+    .empty-state { text-align: center; padding: 3rem 1.5rem; }
+    .empty-state p { color: #64748b; margin: 0.5rem 0 1.5rem; font-size: 0.95rem; }
+    .empty-state .btn { margin-top: 0.5rem; }
+    .nav-tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; }
+    .nav-tab { padding: 0.5rem 1rem; border-radius: 12px; border: none; background: transparent; color: #64748b; font-size: 0.875rem; cursor: pointer; }
+    .nav-tab.active { background: #0f172a; color: #fff; }
+    .nav-tab:hover:not(.active) { background: #f1f5f9; }
+    .stats-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .stats-item { background: #f8fafc; border-radius: 16px; padding: 1rem; }
+    .stats-item-name { font-weight: 600; margin-bottom: 0.25rem; }
+    .stats-item-row { display: flex; justify-content: space-between; font-size: 0.875rem; color: #64748b; }
+    .stats-chart { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin-top: 0.5rem; }
+    .stats-bar { flex: 1; background: #e2e8f0; border-radius: 3px; height: 12px; min-width: 4px; transition: background 0.2s; }
+    .stats-bar.filled { background: #0f172a; height: 12px; }
+    .habit-block { cursor: grab; transition: transform 0.25s ease, opacity 0.25s ease; }
+    .habit-block:active { cursor: grabbing; }
+    .habit-block.dragging { opacity: 0.5; }
+    @supports (view-transition-name: none) {
+      .habit-block { view-transition-name: var(--vt-name, none); }
+    }
+    .habit-actions { display: flex; gap: 0.25rem; justify-content: flex-end; margin-top: 0.5rem; }
+    .checkbox-wrap.check-pop { animation: checkPop 0.3s ease-out; }
+    .calendar-cell.done.cell-pop { animation: cellPop 0.25s ease-out; }
+    @keyframes checkPop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    @keyframes cellPop { 0% { transform: scale(1); } 50% { transform: scale(1.15); box-shadow: 0 0 0 3px rgba(15,23,42,0.3); } 100% { transform: scale(1); } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useMemo } = React;
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const todayKey = () => toKey(new Date());
+    const daysAgoKey = (days) => {
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return toKey(d);
+    };
+    const monthLabel = (date) => new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(date);
+    const weekdayLabels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+    const initialHabits = [
+      { id: '1', name: 'Зарядка', reason: 'Начни день с движения.', completedDates: [] },
+      { id: '2', name: 'Английский', reason: 'Регулярная практика — ключ к прогрессу.', completedDates: [] },
+    ];
+
+    const STORAGE_KEY = 'motivato-demo-v1';
+
+    const getSevenDayPercent = (habit) => {
+      let hits = 0;
+      for (let i = 0; i < 7; i++) if (habit.completedDates.includes(daysAgoKey(i))) hits++;
+      return Math.round((hits / 7) * 100);
+    };
+
+    const getCurrentStreak = (habit) => {
+      let streak = 0;
+      for (let i = 0; i < 365; i++) {
+        if (habit.completedDates.includes(daysAgoKey(i))) streak++;
+        else break;
+      }
+      return streak;
+    };
+
+    const getBestStreak = (habit) => {
+      const sorted = [...habit.completedDates].sort();
+      if (!sorted.length) return 0;
+      let best = 1, curr = 1;
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = new Date(sorted[i - 1]).getTime();
+        const d = new Date(sorted[i]).getTime();
+        if ((d - prev) / (24*60*60*1000) === 1) curr++;
+        else { best = Math.max(best, curr); curr = 1; }
+      }
+      return Math.max(best, curr);
+    };
+
+    const icons = {
+      target: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+      calendar: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+      trophy: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+      quote: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2z"/></svg>,
+      plus: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      flame: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>,
+      chevronLeft: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>,
+      chevronRight: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>,
+      check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
+      barChart: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
+    };
+
+    const ALL_QUOTES = [
+      'Не жди мотивацию. Делай маленькое действие, и мотивация подтянется следом.',
+      'Дисциплина — это когда ты защищаешь свои будущие результаты от своего текущего настроения.',
+      'Даже один выполненный день — это уже голос за нового себя.',
+      'Серия не строится за раз. Она строится сегодня.',
+      'Лучше 5 минут, чем ноль. Лучше начать, чем ждать идеального момента.',
+      'Твоё будущее — это сумма маленьких решений, которые ты принимаешь каждый день.',
+      'Не сравнивай себя с другими. Сравнивай себя с собой вчера.',
+      'Мотивация приходит и уходит. Система остаётся.',
+      'Один плохой день не отменяет всех хороших.',
+      'Маленькие шаги каждый день меняют всё.',
+      'Ты не обязан быть идеальным. Ты обязан начать.',
+      'Сделай сегодня то, что твоё будущее скажет тебе спасибо.',
+      'Сложность — это иллюзия. Сложно только первое действие.',
+      'Не ищи вдохновения. Ищи дисциплину.',
+      'Каждый день — новая возможность показать себе, на что ты способен.',
+      'Твоя жизнь через год будет зависеть от книг, которые ты прочитаешь, и привычек, которые ты сформируешь.',
+      'Просто начни. Остальное придёт само.',
+      'Не откладывай на завтра то, что можно сделать за две минуты сегодня.',
+      'Прогресс важнее совершенства.',
+      'Ты сильнее, чем думаешь. Просто начни.',
+      'Сегодня — единственный день, который ты можешь контролировать.',
+      'Лучшее время посадить дерево было 20 лет назад. Второе лучшее — сегодня.',
+      'Действие лечит сомнения.',
+      'Не бойся идти медленно. Бойся стоять на месте.',
+      'Каждый выполненный день — это инвестиция в себя.',
+      'Ты не сломан. Ты в процессе.',
+      'Делай, даже когда не хочется. Особенно когда не хочется.',
+      'Ритм важнее интенсивности.',
+      'Один день — это не вся жизнь. Но один день может изменить всё.',
+      'Твоя зона комфорта — это тюрьма, которую ты сам себе построил.',
+    ];
+
+    function MotivationalQuote() {
+      const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (24*60*60*1000));
+      const index = dayOfYear % ALL_QUOTES.length;
+      return <p className="quote-text">{ALL_QUOTES[index]}</p>;
+    }
+
+    function HabitCalendar({ habit, onToggleDate }) {
+      const [cursor, setCursor] = useState(() => {
+        const d = new Date();
+        return new Date(d.getFullYear(), d.getMonth(), 1);
+      });
+      const [popCell, setPopCell] = useState(null);
+
+      const cells = useMemo(() => {
+        const year = cursor.getFullYear();
+        const month = cursor.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const startOffset = (firstDay.getDay() + 6) % 7;
+        const totalDays = lastDay.getDate();
+        const totalCells = Math.ceil((startOffset + totalDays) / 7) * 7;
+        return Array.from({ length: totalCells }, (_, i) => {
+          const dayNum = i - startOffset + 1;
+          if (dayNum < 1 || dayNum > totalDays) return null;
+          const date = new Date(year, month, dayNum);
+          return { dayNum, key: toKey(date), isToday: toKey(date) === todayKey() };
+        });
+      }, [cursor]);
+
+      const handleCellClick = (cell) => {
+        if (!cell || !onToggleDate) return;
+        onToggleDate(habit.id, cell.key);
+        setPopCell(cell.key);
+        setTimeout(() => setPopCell(null), 300);
+      };
+
+      return (
+        <div className="calendar-wrap">
+          <div className="calendar-nav">
+            <button className="btn btn-ghost btn-icon" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>{icons.chevronLeft}</button>
+            <span className="calendar-month">{monthLabel(cursor)}</span>
+            <button className="btn btn-ghost btn-icon" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>{icons.chevronRight}</button>
+          </div>
+          <div className="calendar-weekdays">{weekdayLabels.map(d => <div key={d}>{d}</div>)}</div>
+          <div className="calendar-grid">
+            {cells.map((cell, i) => {
+              if (!cell) return <div key={i} className="calendar-cell empty"/>;
+              const done = habit.completedDates.includes(cell.key);
+              let cls = 'calendar-cell ' + (done ? 'done' : cell.isToday ? 'today' : 'other');
+              if (onToggleDate && popCell === cell.key) cls += ' cell-pop';
+              return (
+                <div key={cell.key} className={cls} onClick={() => handleCellClick(cell)} style={onToggleDate ? {cursor: 'pointer'} : {}}>
+                  {cell.dayNum}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function StatisticsScreen({ habits }) {
+      const now = new Date();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      if (!habits.length) {
+        return (
+          <div className="card">
+            <div className="card-header">
+              <div className="section-title">{icons.barChart} Статистика</div>
+            </div>
+            <div className="card-content">
+              <p className="quote-text" style={{textAlign: 'center', padding: '2rem 0'}}>Добавь привычки, чтобы видеть статистику.</p>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="card">
+          <div className="card-header">
+            <div className="section-title">{icons.barChart} Статистика</div>
+          </div>
+          <div className="card-content">
+            <div className="stats-list">
+              {habits.map(habit => {
+                const current = getCurrentStreak(habit);
+                const best = getBestStreak(habit);
+                const weekPct = getSevenDayPercent(habit);
+                const monthData = Array.from({ length: daysInMonth }, (_, i) => {
+                  const d = new Date(now.getFullYear(), now.getMonth(), i + 1);
+                  return habit.completedDates.includes(toKey(d));
+                });
+                const totalDone = monthData.filter(Boolean).length;
+                return (
+                  <div key={habit.id} className="stats-item">
+                    <div className="stats-item-name">{habit.name}</div>
+                    <div className="stats-item-row">
+                      <span>Текущая серия</span>
+                      <strong>{current} дней</strong>
+                    </div>
+                    <div className="stats-item-row">
+                      <span>Рекорд серии</span>
+                      <strong>{best} дней</strong>
+                    </div>
+                    <div className="stats-item-row">
+                      <span>За 7 дней</span>
+                      <strong>{weekPct}%</strong>
+                    </div>
+                    <div className="stats-item-row">
+                      <span>В этом месяце</span>
+                      <strong>{totalDone} из {daysInMonth}</strong>
+                    </div>
+                    <div className="stats-chart" title="Дни месяца (тёмное = сделано)">
+                      {monthData.map((filled, i) => (
+                        <div key={i} className={'stats-bar ' + (filled ? 'filled' : '')}/>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [habits, setHabits] = useState(initialHabits);
+      const [newName, setNewName] = useState('');
+      const [newReason, setNewReason] = useState('');
+      const [selectedHabitId, setSelectedHabitId] = useState(initialHabits[0]?.id || '');
+      const [dialogOpen, setDialogOpen] = useState(false);
+      const [habitToDelete, setHabitToDelete] = useState(null);
+      const [habitToEdit, setHabitToEdit] = useState(null);
+      const [editName, setEditName] = useState('');
+      const [editReason, setEditReason] = useState('');
+      const [currentView, setCurrentView] = useState('main');
+      const [justChecked, setJustChecked] = useState(null);
+      const [draggingId, setDraggingId] = useState(null);
+      const [lastDragOverId, setLastDragOverId] = useState(null);
+
+      useEffect(() => {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            setHabits(parsed);
+            if (parsed[0]?.id) setSelectedHabitId(parsed[0].id);
+          } catch (e) {}
+        }
+      }, []);
+
+      useEffect(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+        if (!habits.find(h => h.id === selectedHabitId) && habits[0]) setSelectedHabitId(habits[0].id);
+      }, [habits, selectedHabitId]);
+
+      const completedTodayCount = useMemo(() => habits.filter(h => h.completedDates.includes(todayKey())).length, [habits]);
+      const totalWeekPercent = useMemo(() => {
+        if (!habits.length) return 0;
+        return Math.round(habits.reduce((a, h) => a + getSevenDayPercent(h), 0) / habits.length);
+      }, [habits]);
+
+      const selectedHabit = habits.find(h => h.id === selectedHabitId) || habits[0];
+
+      const toggleDate = (habitId, dateKey, triggerAnim) => {
+        setHabits(prev => prev.map(h => {
+          if (h.id !== habitId) return h;
+          const has = h.completedDates.includes(dateKey);
+          return { ...h, completedDates: has ? h.completedDates.filter(d => d !== dateKey) : [...h.completedDates, dateKey].sort() };
+        }));
+        if (triggerAnim) {
+          setJustChecked(habitId);
+          setTimeout(() => setJustChecked(null), 300);
+        }
+      };
+
+      const addHabit = () => {
+        const name = newName.trim();
+        if (!name) return;
+        const habit = { id: crypto.randomUUID(), name, reason: newReason.trim(), completedDates: [] };
+        setHabits(prev => [habit, ...prev]);
+        setSelectedHabitId(habit.id);
+        setNewName('');
+        setNewReason('');
+        setDialogOpen(false);
+      };
+
+      const deleteHabit = (id) => {
+        setHabits(prev => prev.filter(h => h.id !== id));
+        setHabitToDelete(null);
+      };
+
+      const updateHabit = () => {
+        const name = editName.trim();
+        if (!name || !habitToEdit) return;
+        setHabits(prev => prev.map(h => h.id === habitToEdit.id ? { ...h, name, reason: editReason.trim() } : h));
+        setHabitToEdit(null);
+        setEditName('');
+        setEditReason('');
+      };
+
+      const reorderHabits = (dragId, dropId, keepDragging) => {
+        if (dragId === dropId) return;
+        const from = habits.findIndex(h => h.id === dragId);
+        const to = habits.findIndex(h => h.id === dropId);
+        if (from < 0 || to < 0) return;
+        const next = [...habits];
+        const [removed] = next.splice(from, 1);
+        next.splice(to, 0, removed);
+        const doUpdate = () => {
+          setHabits(next);
+          if (!keepDragging) setDraggingId(null);
+        };
+        if (typeof document.startViewTransition === 'function') {
+          document.startViewTransition(() => ReactDOM.flushSync(doUpdate));
+        } else {
+          doUpdate();
+        }
+      };
+
+      const handleDragOver = (overId, e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (!draggingId || overId === draggingId) {
+          if (overId === draggingId) setLastDragOverId(null);
+          return;
+        }
+        if (overId === lastDragOverId) return;
+        setLastDragOverId(overId);
+        reorderHabits(draggingId, overId, true);
+      };
+
+      return (
+        <div className="app">
+          <div className="container space-y">
+            <div className="card fade-in">
+              <div className="card-hero">
+                <p className="tag">Motivato</p>
+                <h1>Твой мобильный пульт дисциплины</h1>
+                <p>Один день. Один шаг вперёд.</p>
+              </div>
+              <div className="stats">
+                <div className="stat">
+                  <div className="stat-label">{icons.target} Сегодня</div>
+                  <div className="stat-value">{completedTodayCount}/{habits.length}</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-label">{icons.calendar} 7 дней</div>
+                  <div className="stat-value">{totalWeekPercent}%</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-label">{icons.trophy} Фокус</div>
+                  <div className="stat-focus">Победи текущий день</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="nav-tabs">
+              <button className={`nav-tab ${currentView === 'main' ? 'active' : ''}`} onClick={() => setCurrentView('main')}>Главная</button>
+              <button className={`nav-tab ${currentView === 'stats' ? 'active' : ''}`} onClick={() => setCurrentView('stats')}>Статистика</button>
+            </div>
+
+            {currentView === 'stats' ? (
+              <StatisticsScreen habits={habits}/>
+            ) : (
+            <>
+            <div className="card">
+              <div className="card-header">
+                <div className="section-title">{icons.quote} Мотивация дня</div>
+              </div>
+              <div className="card-content space-y">
+                <MotivationalQuote/>
+                <div className="antisliv">
+                  <h4>Антислив</h4>
+                  <p>Когда не хочется, не требуй от себя идеала. Сделай минимальную версию действия и сохрани ритм.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header">
+                <div className="header-row">
+                  <div className="section-title">Привычки</div>
+                  {habits.length > 0 && <button className="btn btn-default btn-sm" onClick={() => setDialogOpen(true)}>{icons.plus} Добавить</button>}
+                </div>
+              </div>
+              <div className="card-content space-y">
+                {habits.length === 0 ? (
+                  <div className="empty-state">
+                    <p>Добавь первую привычку — маленький шаг к лучшей версии себя.</p>
+                    <button className="btn btn-default" onClick={() => setDialogOpen(true)}>{icons.plus} Добавить привычку</button>
+                  </div>
+                ) : habits.map((habit, idx) => {
+                  const doneToday = habit.completedDates.includes(todayKey());
+                  const weekPercent = getSevenDayPercent(habit);
+                  const streak = getCurrentStreak(habit);
+                  return (
+                    <div key={habit.id} className={`habit-block fade-in ${draggingId === habit.id ? 'dragging' : ''}`} style={{animationDelay: idx * 0.03 + 's', '--vt-name': `habit-${habit.id}`}}
+                      draggable onDragStart={e => { setDraggingId(habit.id); setLastDragOverId(null); e.dataTransfer.setData('text', habit.id); }}
+                      onDragEnd={() => { setDraggingId(null); setLastDragOverId(null); }}
+                      onDragOver={e => handleDragOver(habit.id, e)}>
+                      <div className="habit-item">
+                        <div className="habit-row">
+                          <div className={`checkbox-wrap ${doneToday ? 'checked' : ''} ${justChecked === habit.id ? 'check-pop' : ''}`} onClick={() => toggleDate(habit.id, todayKey(), true)}>
+                            {doneToday && icons.check}
+                          </div>
+                          <div className="habit-body">
+                            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                              <h3 className="habit-title">{habit.name}</h3>
+                              {doneToday && <span className="badge">Сегодня</span>}
+                            </div>
+                            <p className="habit-reason">{habit.reason || 'Без причины привычка быстро сдувается.'}</p>
+                            <div className="habit-meta">
+                              <div className="habit-meta-item">
+                                <div className="habit-meta-label">{icons.flame} Серия</div>
+                                <div className="habit-meta-value">{streak}</div>
+                              </div>
+                              <div className="habit-meta-item">
+                                <div className="habit-meta-label">7 дней</div>
+                                <div className="habit-meta-value">{weekPercent}%</div>
+                              </div>
+                            </div>
+                            <div className="habit-progress">
+                              <div className="habit-progress-header"><span>Прогресс</span><span>{weekPercent}%</span></div>
+                              <div className="progress-bar"><div className="progress-fill" style={{width: weekPercent + '%'}}/></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="habit-actions">
+                        <button className="btn btn-ghost btn-sm" onClick={() => { setHabitToEdit(habit); setEditName(habit.name); setEditReason(habit.reason || ''); }}>Редактировать</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setHabitToDelete(habit)}>Удалить</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {selectedHabit && (
+              <div className="card">
+                <div className="card-header">
+                  <div className="space-y">
+                    <div>
+                      <div className="section-title">Календарь</div>
+                      <p className="habit-reason" style={{marginTop: '0.25rem'}}>Выбор привычки здесь, календарь показывает историю</p>
+                    </div>
+                    <div className="habit-tabs">
+                      {habits.map(h => (
+                        <button key={h.id} className={`habit-tab ${h.id === selectedHabitId ? 'active' : ''}`} onClick={() => setSelectedHabitId(h.id)}>{h.name}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="card-content" style={{paddingTop: 0}}>
+                  <HabitCalendar habit={selectedHabit}/>
+                </div>
+              </div>
+            )}
+            </>
+            )}
+          </div>
+
+          {dialogOpen && (
+            <div className="modal-overlay" onClick={() => setDialogOpen(false)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3 className="modal-title">Добавить привычку</h3>
+                </div>
+                <div className="modal-body">
+                  <input className="input" placeholder="Например: Спорт 20 минут" value={newName} onChange={e => setNewName(e.target.value)}/>
+                  <textarea className="textarea" placeholder="Зачем тебе это нужно?" value={newReason} onChange={e => setNewReason(e.target.value)}/>
+                  <button className="btn btn-default" onClick={addHabit}>Сохранить</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {habitToDelete && (
+            <div className="modal-overlay" onClick={() => setHabitToDelete(null)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3 className="modal-title">Удалить привычку?</h3>
+                  <p className="quote-text" style={{marginTop: '0.5rem'}}>«{habitToDelete.name}» — вся история прогресса будет удалена.</p>
+                </div>
+                <div className="modal-body" style={{flexDirection: 'row', gap: '0.5rem', justifyContent: 'flex-end'}}>
+                  <button className="btn btn-ghost" onClick={() => setHabitToDelete(null)}>Отмена</button>
+                  <button className="btn btn-danger" onClick={() => deleteHabit(habitToDelete.id)}>Удалить</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {habitToEdit && (
+            <div className="modal-overlay" onClick={() => setHabitToEdit(null)}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3 className="modal-title">Редактировать привычку</h3>
+                </div>
+                <div className="modal-body">
+                  <input className="input" placeholder="Название" value={editName} onChange={e => setEditName(e.target.value)}/>
+                  <textarea className="textarea" placeholder="Зачем тебе это нужно?" value={editReason} onChange={e => setEditReason(e.target.value)}/>
+                  <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'flex-end'}}>
+                    <button className="btn btn-ghost" onClick={() => setHabitToEdit(null)}>Отмена</button>
+                    <button className="btn btn-default" onClick={updateHabit}>Сохранить</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+</body>
+</html>
